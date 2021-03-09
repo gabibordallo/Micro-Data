@@ -93,3 +93,5 @@ int %>%
   coord_flip() + labs(title="Interesse por Atividades Culturais", x="Nível de Interesse", y = "Atividade Cultural") +
   theme_classic()
 
+#ta muito lindo
+
