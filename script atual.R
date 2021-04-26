@@ -334,6 +334,81 @@ intfreq %>%
 
   write.csv(tabelaintfreq, file = "intXfreq geral.csv") # exportando para csv
   
+#__________________________________________________________________________________________
+###### RELAÇÃO ALTO INTERESSE X FREQUÊNCIA - Com recortes
+  
+#### Recorte de Renda
+  
+  tabelaintfreq3 <- tabelaint1 %>% 
+    left_join(tabelafreq1, by = c('atividade', 'faixasrenda')) 
+  
+  tabelaintfreq3["FrequenciaxInteresse"] <-((tabelaintfreq3$frf/tabelaintfreq3$fri) * 100) 
+  view(tabelaintfreq3)
+  
+  write.csv(tabelaintfreq3, file = "InteressexFrequência Renda.csv")
+
+#### Recorte de Escolaridade
+  tabelafreq2 <- intfreq %>% 
+    mutate(frequencia = ifelse(frequencia == "último mês" | frequencia == "último ano", "Último Ano", frequencia),
+           educ = ifelse(escola=="fundamental 1 inc"|escola=="fundamental 2 inc", "1 - Fundamental Incompleto",
+                  ifelse(escola=="fundamental 2 comp"|escola=="ensino medio inc", "2 - Fundamental Completo",
+                  ifelse(escola=="ensino medio comp"|escola=="superior inc", "3 - Médio Completo",
+                  ifelse(escola=="superior comp"|escola=="pos grad", "4 - Superior Completo", "NULL"))))) %>%
+    group_by(atividade, frequencia, educ) %>% 
+    summarise(fa = n()) %>%
+    filter(frequencia == 'Último Ano') %>% 
+    mutate(frf = fa/3004 * 100) %>%
+    
+    tabelaint2 <- intfreq %>% 
+    mutate(nivel_interesse = ifelse(nivel_interesse == "8" | nivel_interesse == "9" | nivel_interesse == "10", "Alto Interesse", "Médio/Baixo interesse"),
+           educ = ifelse(escola=="fundamental 1 inc"|escola=="fundamental 2 inc", "1 - Fundamental Incompleto",
+                         ifelse(escola=="fundamental 2 comp"|escola=="ensino medio inc", "2 - Fundamental Completo",
+                                ifelse(escola=="ensino medio comp"|escola=="superior inc", "3 - Médio Completo",
+                                       ifelse(escola=="superior comp"|escola=="pos grad", "4 - Superior Completo", "NULL"))))) %>%
+    group_by(atividade, nivel_interesse, educ) %>% 
+    summarise(fai2 = n()) %>% 
+    filter(nivel_interesse == 'Alto Interesse') %>% 
+    mutate(fri2 = fai2/3004 * 100) %>% 
+    view()
+  
+  # Juntando as duas tabelas e criando a Relação Frequência X Interesse - escolaridade
+  
+  tabelaintfreq4 <- tabelaint2 %>% 
+    left_join(tabelafreq2, by = c('atividade', 'educ')) 
+  
+  tabelaintfreq4["FrequenciaxInteresse"] <-((tabelaintfreq4$frf/tabelaintfreq4$fri2) * 100) 
+  view(tabelaintfreq4)
+  write.csv(tabelaintfreq4, file = "FrequenciaxInteresse Escolaridade.csv")
+  
+##### Recorte de Idade
+  tabelafreq3 <- intfreq %>% 
+    mutate(frequencia = ifelse(frequencia == "último mês" | frequencia == "último ano", "Último Ano", frequencia)) %>%
+    
+    group_by(atividade, frequencia, idade) %>% 
+    summarise(fa = n()) %>%
+    filter(frequencia == 'Último Ano') %>% 
+    mutate(frf = fa/3004 * 100) %>% 
+    
+    tabelaint3 <- intfreq %>% 
+    mutate(nivel_interesse = ifelse(nivel_interesse == "8" | nivel_interesse == "9" | nivel_interesse == "10", "Alto Interesse", "Médio/Baixo interesse")) %>%
+    
+    group_by(atividade, nivel_interesse, idade) %>% 
+    summarise(fai = n()) %>% 
+    filter(nivel_interesse == 'Alto Interesse') %>% 
+    mutate(fri3 = fai/3004 * 100) %>%
+    view()
+  
+  # Juntando as duas tabelas e criando a Relação Frequência X Interesse - idade
+  
+  tabelaintfreq5 <- tabelaint3 %>% 
+    left_join(tabelafreq3, by = c('atividade', 'idade')) 
+  
+  tabelaintfreq5["FrequenciaxInteresse"] <-((tabelaintfreq5$frf/tabelaintfreq5$fri3) * 100) 
+  
+  
+  write.csv(tabelaintfreq5, file = "InteressexFrequência Idade.csv")
+  
+  
   
 # _______________________________________________________________________________________
 #### Gráficos de Barra 
@@ -727,5 +802,3 @@ intfreq %>%
 
 
 # _______________________________________________________________________________________
-
-
