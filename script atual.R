@@ -17,7 +17,7 @@ library(dplyr)
 
 df <- readxl::read_xlsx('spcultural2 - com analise desc.xlsx', sheet = 1)
 
-
+#__________________________________________________________________________________________
 # Ajeitando os dados 
 df <- df %>% 
   mutate(religiao = ifelse(religiao == "1", "Evangélica",
@@ -31,36 +31,41 @@ df <- df %>%
                     ifelse(religiao == "9", "Judaica",
                     ifelse(religiao == "10", "Outra",
                     ifelse(religiao == "11", "Agnóstico",
-                    ifelse(religiao == "12", "Ateu", religiao))))))))))))) %>% 
+                    ifelse(religiao == "12", "Ateu", religiao)))))))))))),
+         estcivil = ifelse(estcivil == "1", "Solteiro(a)",
+                    ifelse(estcivil == "2", "Casado(a)",
+                    ifelse(estcivil == "3", "Viúvo(a)",
+                    ifelse(estcivil == "4", "Divorciado(a)", estcivil))))) %>% 
   view()
 
 
 base_junta <- df %>% 
   mutate(ID = row_number()) %>% 
-  select(ID, sexo, idade, cor, rendaf, escola, religiao, i_biblio:f_games) 
+  select(ID, sexo, idade, cor, rendaf, escola, religiao, estcivil, i_biblio:f_games) 
 
  
   pivot_longer(c(i_biblio:f_games),  names_to="atividade", values_to="nivel_interesse")
 
 
 int1 <- base_junta %>%
-  select(ID, sexo, idade, cor, rendaf, escola, religiao, i_biblio:i_games) %>% 
-  pivot_longer(-c(ID:religiao), names_to="atividade", values_to="nivel_interesse") %>% 
+  select(ID, sexo, idade, cor, rendaf, escola, religiao, estcivil, i_biblio:i_games) %>% 
+  pivot_longer(-c(ID:estcivil), names_to="atividade", values_to="nivel_interesse") %>% 
   separate(atividade, into = c('i','atividade'), sep = '_') %>% 
   select(-i)
 
 
 freq1 <- base_junta %>%
-  select(ID, sexo, idade, cor, rendaf, escola, religiao, f_biblio:f_games) %>% 
-  pivot_longer(-c(ID:religiao), names_to="atividade", values_to="frequencia") %>% 
+  select(ID, sexo, idade, cor, rendaf, escola, religiao, estcivil, f_biblio:f_games) %>% 
+  pivot_longer(-c(ID:estcivil), names_to="atividade", values_to="frequencia") %>% 
   separate(atividade, into = c('i','atividade'), sep = '_') %>% 
   select(-i)
 
 
 intfreq <- int1 %>% 
-  left_join(freq1, by = c('ID', 'atividade', 'rendaf', 'sexo', 'cor', 'escola', 'idade', 'religiao'))
+  left_join(freq1, by = c('ID', 'atividade', 'rendaf', 'sexo', 'cor', 'escola', 'idade', 'religiao', 'estcivil'))
 
 
+#__________________________________________________________________________________________
 
 ########## GRÁFICOS ######################################
 
@@ -89,7 +94,7 @@ library(wordcloud2)
 wordcloud2(words, minRotation = 0, maxRotation = 0, fontFamily = "Segoe UI",
            backgroundColor = "white", color = "random-dark")
 
-
+#__________________________________________________________________________________________
 ##### Piramide de genero - interesses
 intfreq %>% 
   group_by (atividade, sexo) %>%
@@ -115,6 +120,7 @@ intfreq %>%
         plot.caption=element_text(size = 8))
 
 
+#__________________________________________________________________________________________
 ################# FREQUÊNCIA DE CONSUMO - sem ponderação
 
 ### % de pessoas que consumiram há menos de 1 ano
@@ -463,6 +469,12 @@ intfreq %>%
     summarise(farelig = n()) %>% 
     group_by(religiao) %>% 
     view()
+  
+  freqestcivil <-intfreq %>% 
+    group_by(estcivil, atividade) %>% 
+    summarise(faestcivil = n()) %>% 
+    group_by(estcivil) %>% 
+    view()
    
 ##### Códigos dos gráficos:
 ## Primeiro código: "nunca foi" / Segundo código: "Foi há menos de 1 ano"
@@ -665,6 +677,43 @@ intfreq %>%
            title = "Porcentagem (%) de entrevistados que consumiram as Atividades no último ano",
            subtitle = "Em cada grupo Religioso", 
            fill = "Religião") + theme_classic()
+    
+
+# Recortes por Estado Civil
+    intfreq %>%
+      left_join(freqestcivil, by = c("atividade", "estcivil")) %>% 
+      group_by(atividade, estcivil, frequencia, faestcivil) %>% 
+      summarise(fa = n()) %>%
+      filter(frequencia == "nunca foi") %>%
+      group_by(atividade) %>% 
+      mutate(fr = fa/faestcivil *100) %>% 
+      mutate(fr=round(fr, digits=1)) %>% 
+      mutate(pos = -(cumsum(fr) - 0.5*fr) + sum(fr)) %>% 
+      ggplot() + geom_col(aes(x = fr, y = atividade, fill = estcivil)) +
+      geom_text(aes(y = atividade, x = pos, label = fr), size=4) +
+      scale_fill_brewer(palette = "Paired") +
+      labs(x = "Contagem (%)", y = "Atividade Cultural",
+           title = "Porcentagem (%) de entrevistados que nunca consumiram as Atividades",
+           subtitle = "Em cada grupo de Estado Civil", 
+           fill = "Estado Civil") + theme_classic()
+    
+    intfreq %>%
+      mutate(frequencia = ifelse(frequencia == "último mês" | frequencia == "último ano", "Último Ano", frequencia)) %>% 
+      left_join(freqestcivil, by = c("atividade", "estcivil")) %>% 
+      group_by(atividade, estcivil, frequencia, faestcivil) %>% 
+      summarise(fa = n()) %>%
+      filter(frequencia == "Último Ano") %>%
+      group_by(atividade) %>% 
+      mutate(fr = fa/faestcivil *100) %>% 
+      mutate(fr=round(fr, digits=1)) %>% 
+      mutate(pos = -(cumsum(fr) - 0.5*fr) + sum(fr)) %>% 
+      ggplot() + geom_col(aes(x = fr, y = atividade, fill = estcivil)) +
+      geom_text(aes(y = atividade, x = pos, label = fr), size = 4) +
+      scale_fill_brewer(palette = "Paired") +
+      labs(x = "Contagem (%)", y = "Atividade Cultural",
+           title = "Porcentagem (%) de entrevistados que consumiram as Atividades no último ano",
+           subtitle = "Em cada grupo de Estado Civil", 
+           fill = "Estado Civil") + theme_classic()
     
     
 #________________________________________________________________________________________
