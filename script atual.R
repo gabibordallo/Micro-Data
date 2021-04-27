@@ -1,21 +1,15 @@
+# Mudar isso aqui pela pasta certa no SEU computador
 setwd("~/Insper Data/Micro - PP")
+
+# Importando a base geral - você precisa ter ela na mesma pasta do wd que colocou aqui em cima
+# e precisa escrever o nome do arquivo exatamente como ele é
+df <- readxl::read_xlsx('spcultural2 - com analise desc.xlsx', sheet = 1)
 
 # Pacotes obrigatórios para começar
 
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-
-
-#### BASES 
-# spculturalgeral - base grande e original, sem mudanças
-# spcultural - base filtrada com características de recorte + freq + interesse
-# interesses - só as caracteristicas socio + interesse
-# frequencia - só as caracteristicas socio + frequencia
-# intfreq - interesse e frequencia juntos e ajeitadas pelo pivot longer
-
-
-df <- readxl::read_xlsx('spcultural2 - com analise desc.xlsx', sheet = 1)
 
 #__________________________________________________________________________________________
 # Ajeitando os dados 
@@ -44,9 +38,6 @@ base_junta <- df %>%
   select(ID, sexo, idade, cor, rendaf, escola, religiao, estcivil, i_biblio:f_games) 
 
  
-  pivot_longer(c(i_biblio:f_games),  names_to="atividade", values_to="nivel_interesse")
-
-
 int1 <- base_junta %>%
   select(ID, sexo, idade, cor, rendaf, escola, religiao, estcivil, i_biblio:i_games) %>% 
   pivot_longer(-c(ID:estcivil), names_to="atividade", values_to="nivel_interesse") %>% 
