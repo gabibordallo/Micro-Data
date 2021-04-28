@@ -842,3 +842,23 @@ intfreq %>%
 
 
 # _______________________________________________________________________________________
+#ATIVIDADES PAGAS X GRATUITAS
+
+df %>% 
+  mutate(p9=ifelse(p9 == "1", "Somente gratuitas",
+                   ifelse(p9 == "2", "Mais gratuitas do que pagas",
+                          ifelse(p9 == "3", "Mais pagas do que gratuitas", "Somente pagas")))) %>% 
+  group_by(p9) %>% 
+  summarise(fa= n()) %>% 
+  mutate(total = sum(fa)) %>%
+  mutate(fr = fa/total * 100) %>% 
+  mutate(fr = round(fr, digits = 2)) %>% 
+  ggplot() +
+  geom_col(aes(x=p9, y=fr, fill=p9)) +
+  geom_text(aes(x=p9, y=fr,label= fr), vjust=-0.8, hjust=0.7, size=4) +
+  ylim(c(0,50)) +
+  labs(title = "Frequência de consumo de atividades pagas vs gratuitas",
+       x = "",y= "Frequência de consumo (%)", fill="Legenda")+
+  theme_light()
+
+# _______________________________________________________________________________________
