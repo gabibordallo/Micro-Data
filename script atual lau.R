@@ -336,8 +336,8 @@ intfreq %>%
   
 #### Recorte de Renda
   
-  tabelaintfreq3 <- tabelaint1 %>% 
-    left_join(tabelafreq1, by = c('atividade', 'faixasrenda')) 
+  tabelaintfreq3 <- tabelaint %>% 
+    left_join(tabelafreq, by = c('atividade', 'faixasrenda')) 
   
   tabelaintfreq3["FrequenciaxInteresse"] <-((tabelaintfreq3$frf/tabelaintfreq3$fri) * 100) 
   view(tabelaintfreq3)
@@ -434,7 +434,7 @@ intfreq %>%
 
   ggplot(tabelaintfreq7, aes(atividade, FrequenciaxInteresse, estcivil)) + 
     geom_hline(yintercept=100) +
-    geom_point(aes(fill=estcivil, col=estcivil)) + 
+    geom_point(aes(fill=estcivil, col=estcivil, size=1)) + 
     labs(title="Distribuição da Frequência x Interesse pelas Atividade Cultural", subtitle="Recorte por estado civil", x="Atividade", y="Frequência / Interesse") + 
     theme_classic() 
 
