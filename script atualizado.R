@@ -1,9 +1,11 @@
 # Mudar isso aqui pela pasta certa no SEU computador
-setwd("~/Insper/Insper Data/Dados/Dados atuais")
+setwd("~/Insper Data/Micro - PP")
 
 # Importando a base geral - você precisa ter ela na mesma pasta do wd que colocou aqui em cima
 # e precisa escrever o nome do arquivo exatamente como ele é
 df <- readxl::read_xlsx('spcultural2 - com analise desc.xlsx', sheet = 1)
+geosampa <- readxl::read_xlsx('GEOSAMPA 2018 - Cultura.xlsx', sheet = 2)
+
 
 # Pacotes obrigatórios para começar
 
@@ -900,4 +902,46 @@ df %>%
   theme_light()
 
 # _______________________________________________________________________________________
+# GEOSAMPA
+
+install.packages("maptools")
+install.packages("sf")
+
+library(sf)
+library(maptools)
+
+# Densidade de equipamentos culturais em cada distrito 
+geodens <- geosampa %>% 
+  group_by(CODDIST, DISTRITO) %>% 
+  summarise(fa = n()) %>%
+  group_by(DISTRITO) %>% 
+  mutate(fr = fa/1697 * 100) %>% 
+  mutate(fr=round(fr, digits=1)) %>% #definindo só 1 casa decimal pro fr
+  view()
+
+# Unzipando e lendo o Shapefile dos distritos (tem que estar no mesmo wd lá de cima)
+unzip("DISTRITO_MUNICIPAL_SP_SMDU.zip")
+mapa = st_read("DISTRITO_MUNICIPAL_SP_SMDUPolygon.shp")
+
+
+# Juntando as bases
+geomapa <- geodens %>% 
+  left_join(mapa, by = c('DISTRITO'='Nome'))
+
+
+# Plotando mapa
+# scale_fill_continuous(low = "#C7E6E4", high = "#0E2766") +
+ 
+ggplot(data=geomapa) + geom_sf(mapping=aes(geometry=geometry, fill=fa)) + 
+  labs (title="Distribuição de Equipamentos Culturais", 
+        subtitle = "Distritos de São Paulo", fill = "Frequência Absoluta") +
+  theme(legend.position="right", panel.background = element_rect(fill="white"))
+
+
+
+
+
+
+
+
 
